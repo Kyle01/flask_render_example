@@ -9,7 +9,7 @@ app = Flask(__name__)
 load_dotenv() 
 
 def verify_authentication():
-    mode = os.environ.get('DEVELOPMENT_MODE')
+    mode = os.environ.get('DEPLOY_MODE')
 
     if mode == 'dev':
         return True
