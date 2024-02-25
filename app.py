@@ -1,5 +1,5 @@
 import os
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request, json
 import psycopg2
 from dotenv import load_dotenv
 
@@ -18,8 +18,14 @@ def hello_world():
 
 @app.route('/bar')
 def second_endpoint():
+    parse_headers = json.loads(json.dumps({**request.headers}))
+    csrf_token = parse_headers["Cookie"].split('; ')[0].split("=")[1]
+    print(csrf_token)
+    
+
     return jsonify(
         foo="bar",
+        kyle="mcv",
     )
 
 
