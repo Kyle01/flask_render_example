@@ -1,11 +1,38 @@
 import os
-from flask import Flask, jsonify, request, json
+from flask import Flask, jsonify, request, json, abort
+import hashlib
 import psycopg2
 from dotenv import load_dotenv
 
 app = Flask(__name__)
 
 load_dotenv() 
+
+def verify_authentication():
+    mode = os.environ.get('DEVELOPMENT_MODE')
+
+    if mode == 'dev':
+        return True
+    
+    try: 
+        secret = os.environ.get('SECRET_HASH')
+
+        parse_headers = json.loads(json.dumps({**request.headers}))
+        csrf_token = parse_headers["Cookie"].split('; ')[0].split("=")[1]
+        print(csrf_token)
+        request_token = csrf_token.split("%7C")[0]
+        request_hash = csrf_token.split("%7C")[1]
+        
+        hasher = hashlib.sha256()
+        hasher.update(f'{request_token}{secret}'.encode('utf-8'))
+        secret_hash = hasher.hexdigest()
+
+        if secret_hash != request_hash:
+            abort(403)
+        else:
+            return True
+    except: 
+        abort(403)
 
 def get_db_connection():
     DB_CONNECTION_URL = os.environ.get('DB_CONNECTION_URL')
@@ -18,11 +45,7 @@ def hello_world():
 
 @app.route('/bar')
 def second_endpoint():
-    parse_headers = json.loads(json.dumps({**request.headers}))
-    csrf_token = parse_headers["Cookie"].split('; ')[0].split("=")[1]
-    print(csrf_token)
-    
-
+    verify_authentication()
     return jsonify(
         foo="bar",
         kyle="mcv",
